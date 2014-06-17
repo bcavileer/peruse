@@ -2,4 +2,4 @@
 
 require 'peruse'
 
-Peruse.peruse(ARGV[0])
+Peruse.peruse(ARGV[0]).printTree
