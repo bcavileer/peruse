@@ -3,11 +3,41 @@ require 'tree'
 require 'pry'
 
 module Peruse
+  class MyTree < Tree::TreeNode
+    def print_tree(level = 0)
+      if is_root?
+        print "*"
+      else
+        print "|" unless parent.is_last_sibling?
+        print(' ' * (level - 1) * 4)
+        print(is_last_sibling? ? "+" : "|")
+        print "---"
+        print(has_children? ? "+" : ">")
+      end
+
+      puts " #{name} : #{content}"
+
+      children { |child| child.print_tree(level + 1) if child }
+      self
+    end
+
+    def print_content
+      if content
+        puts
+        puts ">>> #{content}"
+        puts File.read(content)
+      end
+
+      children { |child| child.print_content if child }
+      self
+    end
+  end
+
   class Peruser
     def initialize(gemname, kernel = Kernel)
       @gemname = gemname
       @kernel = kernel
-      @root = @require_level = Tree::TreeNode.new(gemname)
+      @root = @require_level = MyTree.new(gemname)
     end
 
     attr_accessor :gemname, :require_level, :root, :current_name
@@ -25,7 +55,7 @@ module Peruse
       redefine_kernel_require
       yield
       restore_original_kernel_require
-      require_level
+      root
     end
 
     private
@@ -46,12 +76,25 @@ module Peruse
           $require_recorder.instance_eval do
             set_current_name(name)
             push_require_level unless current_level?
+            set_file_name
             r = original_kernel_require(name)
             pop_require_level
             r
           end
         end
       end
+    end
+
+    def set_file_name
+      nm = nil
+      $:.each do |p|
+        rbname = current_name + '.rb'
+        if File.exists? File.join(p, rbname)
+          nm = File.join(p, rbname)
+          break
+        end
+      end
+      require_level.content = nm
     end
 
     def set_current_name(name)
@@ -71,7 +114,7 @@ module Peruse
     end
 
     def new_child
-      require_level << Tree::TreeNode.new(current_name)
+      require_level << MyTree.new(current_name)
     end
 
     def pop_require_level
