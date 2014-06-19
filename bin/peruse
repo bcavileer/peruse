@@ -1,17 +1,22 @@
 #!/usr/bin/env ruby
 
 require 'peruse'
-require 'pony'
+# require 'pony'
 
 gemname = ARGV[0]
 
 plaintext = StringIO.new
-$stdout = foo
-Peruse::Peruser.new(gemname).peruse.print_tree.print_content
+$stdout = plaintext
+# Peruse::Peruser.new(gemname).peruse.print_tree.print_content
+perused = Peruse::Peruser.new(gemname).peruse
+# perused.plaintext
+# perused.html
 $stdout = STDOUT
 
-html = foo.dup
-Pony.mail to: ARGV[1],
-          via: :sendmail,
-          body: plaintext.string,
-          html_body: html.string
+puts perused.html
+# puts perused.plaintext
+
+# Pony.mail to: ARGV[1],
+#           via: :sendmail,
+#           body: plaintext.string,
+#           html_body: renderer.result(nil)

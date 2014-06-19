@@ -1,48 +1,8 @@
 require "peruse/version"
-require 'tree'
-require 'pry'
+require 'peruse/tree'
 
 module Peruse
-  class MyTree < Tree::TreeNode
-    def print_tree(level = 0)
-      if is_root?
-        print "*"
-      else
-        print "|" unless parent.is_last_sibling?
-        print(' ' * (level - 1) * 4)
-        print(is_last_sibling? ? "+" : "|")
-        print "---"
-        print(has_children? ? "+" : ">")
-      end
-
-      puts " #{name} : #{content}"
-
-      children { |child| child.print_tree(level + 1) if child }
-      self
-    end
-
-    def print_content
-      if content
-        puts
-        puts ">>> #{content}"
-        puts File.read(content)
-      end
-
-      children { |child| child.print_content if child }
-      self
-    end
-  end
-
   class Peruser
-    def initialize(gemname, kernel = Kernel)
-      @gemname = gemname
-      @kernel = kernel
-      @root = @require_level = MyTree.new(gemname)
-    end
-
-    attr_accessor :gemname, :require_level, :root, :current_name
-    attr_reader :kernel
-
     def peruse
       record do
         require gemname
@@ -57,6 +17,15 @@ module Peruse
       restore_original_kernel_require
       root
     end
+
+    def initialize(gemname, kernel = Kernel)
+      @gemname = gemname
+      @kernel = kernel
+      @root = @require_level = Tree.new(gemname)
+    end
+
+    attr_accessor :gemname, :require_level, :root, :current_name
+    attr_reader :kernel
 
     private
 
@@ -114,7 +83,7 @@ module Peruse
     end
 
     def new_child
-      require_level << MyTree.new(current_name)
+      require_level << Tree.new(current_name)
     end
 
     def pop_require_level
